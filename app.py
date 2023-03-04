@@ -20,7 +20,8 @@ import datetime as dt
 engine = create_engine("sqlite:///Resources/hawaii.sqlite")
 
 Base = automap_base()
-session = Session(engine)
+Base.prepare(autoload_with=engine)
+
 
 
 
@@ -50,8 +51,7 @@ def welcome():
 
 @app.route("/api/v1.0/precipitation")
 def precipitation_funct():
-    # reflect the tables
-    Base.prepare(autoload_with=engine)
+    session = Session(engine)
     #Convert the last_year_prcp query results to a dictionary using date as the key and prcp as the value.
     last_year_prcp = session.query(Measurement.date, Measurement.prcp).filter(Measurement.date >= '2016-08-23').all()
     last_year_prcp = dict(last_year_prcp)
@@ -62,8 +62,7 @@ def precipitation_funct():
     
 @app.route("/api/v1.0/stations")
 def stations_funct():
-    # reflect the tables
-    Base.prepare(autoload_with=engine)
+    session = Session(engine)
     #Return a JSON list of stations from the dataset.
     stations_list = session.query(Station.station).all()
     stations_list = list(np.ravel(stations_list))
@@ -72,8 +71,7 @@ def stations_funct():
 
 @app.route("/api/v1.0/tobs")
 def tobs_funct():
-    # reflect the tables
-    Base.prepare(autoload_with=engine)
+    session = Session(engine)
     #Return a JSON list of Temperature Observations (tobs) for the previous year
     tobs_list = session.query(Measurement.tobs).filter(Measurement.date >= '2016-08-23').all()
     tobs_list = list(np.ravel(tobs_list))
@@ -82,7 +80,7 @@ def tobs_funct():
 
 @app.route("/api/v1.0/<start>")
 def start_funct(start=None):
-    Base.prepare(autoload_with=engine)
+    session = Session(engine)
     start_date = dt.datetime.strptime(start, "%m%d%Y")
     #Return a JSON list of the minimum temperature, the average temperature, and the maximum temperature for a specified start or start-end range.
     list1 = session.query(func.min(Measurement.tobs), func.avg(Measurement.tobs), func.max(Measurement.tobs)).filter(Measurement.date >= start_date).all()
@@ -93,7 +91,7 @@ def start_funct(start=None):
 #For a specified start, calculate TMIN, TAVG, and TMAX for all the dates greater than or equal to the start date
 @app.route("/api/v1.0/<start>/<end>")
 def start_end_funct(start, end):
-    Base.prepare(autoload_with=engine)
+    session = Session(engine)
     start_date = dt.datetime.strptime(start, "%m%d%Y")
     end_date = dt.datetime.strptime(end, "%m%d%Y")
     list2 = session.query(func.min(Measurement.tobs), func.avg(Measurement.tobs), func.max(Measurement.tobs)).filter(Measurement.date >= start_date).filter(Measurement.date <= end_date).all()
